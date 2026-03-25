@@ -3,8 +3,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 const API = '/api';
 
 export function useGameState() {
-  const [state, setState] = useState({ status: 'idle' });
+  const [gameState, setGameState] = useState({ status: 'idle' });
   const [leaderboard, setLeaderboard] = useState([]);
+  const [pump, setPump] = useState(null);
   const pollRef = useRef(null);
 
   const fetchLeaderboard = useCallback(async () => {
@@ -15,32 +16,37 @@ export function useGameState() {
     } catch { /* ignore */ }
   }, []);
 
+  const fetchPump = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/pump`);
+      if (res.ok) {
+        const data = await res.json();
+        setPump(data.pump);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   const pollStatus = useCallback(async () => {
     try {
       const res = await fetch(`${API}/game/status`);
       const data = await res.json();
-      setState(data);
-
-      // If just finished, fetch leaderboard
-      if (data.status === 'finished') {
-        fetchLeaderboard();
-      }
+      setGameState(data);
     } catch { /* ignore */ }
-  }, [fetchLeaderboard]);
+  }, []);
 
-  // Poll during active game at 5 Hz, otherwise slower
   useEffect(() => {
-    const interval = state.status === 'active' ? 200 : 1000;
+    // Poll faster while a game is running
+    const interval = gameState.status === 'waiting' ? 1000 : 3000;
     clearInterval(pollRef.current);
     pollRef.current = setInterval(pollStatus, interval);
     return () => clearInterval(pollRef.current);
-  }, [state.status, pollStatus]);
+  }, [gameState.status, pollStatus]);
 
-  // Initial fetch
   useEffect(() => {
     pollStatus();
     fetchLeaderboard();
-  }, [pollStatus, fetchLeaderboard]);
+    fetchPump();
+  }, [pollStatus, fetchLeaderboard, fetchPump]);
 
   const startGame = useCallback(async (name) => {
     const res = await fetch(`${API}/game/start`, {
@@ -50,22 +56,21 @@ export function useGameState() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to start');
-    setState(data);
+    setGameState(data);
   }, []);
 
   const finishGame = useCallback(async () => {
     const res = await fetch(`${API}/game/finish`, { method: 'POST' });
     const data = await res.json();
-    setState(data);
     fetchLeaderboard();
     return data;
   }, [fetchLeaderboard]);
 
   const resetGame = useCallback(async () => {
     await fetch(`${API}/game/reset`, { method: 'POST' });
-    setState({ status: 'idle' });
+    setGameState({ status: 'idle' });
     fetchLeaderboard();
   }, [fetchLeaderboard]);
 
-  return { state, leaderboard, startGame, finishGame, resetGame, fetchLeaderboard };
+  return { gameState, leaderboard, pump, startGame, finishGame, resetGame, fetchLeaderboard };
 }

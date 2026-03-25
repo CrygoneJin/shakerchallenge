@@ -1,19 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useGameState } from './hooks/useGameState';
-import VibrationGauge from './components/VibrationGauge';
-import CountdownRing from './components/CountdownRing';
+import MeasurementCountdown from './components/MeasurementCountdown';
 import Leaderboard from './components/Leaderboard';
 
-// ── Idle / Name entry screen ──────────────────────────────────────────────────
-function IdleScreen({ onStart, leaderboard }) {
+// ── Idle / Name entry ─────────────────────────────────────────────────────────
+function IdleScreen({ onStart, leaderboard, pump }) {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const inputRef = useRef(null);
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+  useEffect(() => { inputRef.current?.focus(); }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -27,34 +24,37 @@ function IdleScreen({ onStart, leaderboard }) {
     }
   }
 
+  const wakeMinutes = pump?.wakeUpTimeMin ?? '?';
+
   return (
-    <div className="flex flex-col items-center gap-8 w-full max-w-lg mx-auto px-4 py-12">
+    <div className="flex flex-col items-center gap-8 w-full max-w-lg mx-auto px-4 py-10">
       {/* Header */}
       <div className="text-center">
-        <div className="text-ksb-orange font-black text-5xl tracking-tight text-shadow">
-          SHAKER
-        </div>
-        <div className="text-white font-black text-5xl tracking-tight text-shadow">
-          CHALLENGE
-        </div>
-        <div className="mt-2 text-white/60 text-sm">
-          Powered by KSB Guard · Condition Monitoring
-        </div>
+        <div className="text-ksb-orange font-black text-5xl tracking-tight text-shadow">SHAKER</div>
+        <div className="text-white font-black text-5xl tracking-tight text-shadow">CHALLENGE</div>
+        <div className="mt-2 text-white/50 text-sm">Powered by KSB Guard · Condition Monitoring</div>
       </div>
 
-      {/* Animated sensor icon */}
+      {/* Sensor icon */}
       <div className="relative">
-        <div className="w-32 h-32 rounded-full bg-ksb-lightblue/20 flex items-center justify-center border-2 border-ksb-lightblue/30 pulse-ring">
-          <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <div className="w-28 h-28 rounded-full bg-ksb-lightblue/20 flex items-center justify-center border-2 border-ksb-lightblue/30 pulse-ring">
+          <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
             <rect x="20" y="8" width="24" height="48" rx="6" fill="#0066CC" stroke="white" strokeWidth="2"/>
             <rect x="26" y="14" width="12" height="8" rx="2" fill="#003F7F"/>
             <circle cx="32" cy="42" r="5" fill="#E8500A"/>
             <path d="M12 28 Q8 32 12 36" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
             <path d="M52 28 Q56 32 52 36" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
-            <path d="M6 22 Q0 32 6 42" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.5"/>
-            <path d="M58 22 Q64 32 58 42" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.5"/>
           </svg>
         </div>
+      </div>
+
+      {/* How it works */}
+      <div className="w-full bg-white/5 rounded-2xl px-5 py-4 text-sm text-white/70 space-y-1">
+        <div className="font-semibold text-white mb-2">How it works</div>
+        <div>1. Enter your name and press Start</div>
+        <div>2. Pick up the KSB Guard sensor and shake it as hard as you can</div>
+        <div>3. Keep shaking — a new measurement arrives every <span className="text-white font-semibold">{wakeMinutes} min</span></div>
+        <div>4. Your vibration score appears instantly</div>
       </div>
 
       {/* Name form */}
@@ -65,119 +65,134 @@ function IdleScreen({ onStart, leaderboard }) {
           </label>
           <input
             ref={inputRef}
-            type="text"
-            value={name}
+            type="text" value={name}
             onChange={e => { setName(e.target.value); setError(''); }}
             placeholder="Enter your name..."
             maxLength={40}
-            className="w-full rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/30 px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-ksb-orange focus:border-transparent"
+            className="w-full rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/30 px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-ksb-orange"
           />
           {error && <p className="mt-1 text-red-400 text-sm">{error}</p>}
         </div>
         <button
-          type="submit"
-          disabled={loading}
+          type="submit" disabled={loading}
           className="w-full bg-ksb-orange hover:bg-ksb-lightorange disabled:opacity-50 text-white font-black text-xl rounded-xl py-4 transition-all active:scale-95 shadow-lg"
         >
           {loading ? 'STARTING...' : '🎯 START CHALLENGE'}
         </button>
       </form>
 
-      {/* Leaderboard preview */}
-      <div className="w-full">
-        <h2 className="text-center font-bold text-white/70 uppercase tracking-widest text-sm mb-4">
-          Top Scores
-        </h2>
-        <Leaderboard entries={leaderboard} />
-      </div>
+      {/* Leaderboard */}
+      {leaderboard.length > 0 && (
+        <div className="w-full">
+          <h2 className="text-center font-bold text-white/50 uppercase tracking-widest text-sm mb-4">Top Scores</h2>
+          <Leaderboard entries={leaderboard} />
+        </div>
+      )}
     </div>
   );
 }
 
-// ── Active game screen ────────────────────────────────────────────────────────
-function ActiveScreen({ state, onFinish }) {
-  const { name, remaining, duration, currentVibration, peakVibration, score } = state;
-
-  // Auto-finish when timer hits 0
-  const finishedRef = useRef(false);
-  useEffect(() => {
-    if (remaining === 0 && !finishedRef.current) {
-      finishedRef.current = true;
-      onFinish();
-    }
-  }, [remaining, onFinish]);
-
-  const intensity = Math.min(currentVibration / 100, 1);
-  const bgOpacity = 0.05 + intensity * 0.25;
+// ── Active game — waiting for measurement ─────────────────────────────────────
+function WaitingScreen({ gameState, onFinish }) {
+  const { name, nextMeasurementAt, wakeUpTimeMs, msUntilMeasurement } = gameState;
+  const isImminent = msUntilMeasurement != null && msUntilMeasurement <= 5000;
 
   return (
     <div
-      className="flex flex-col items-center gap-6 w-full max-w-lg mx-auto px-4 py-8"
-      style={{ background: `radial-gradient(circle at 50% 40%, rgba(232,80,10,${bgOpacity}) 0%, transparent 70%)` }}
+      className="flex flex-col items-center gap-6 w-full max-w-lg mx-auto px-4 py-10"
+      style={{ background: isImminent
+        ? 'radial-gradient(circle at 50% 40%, rgba(232,80,10,0.3) 0%, transparent 70%)'
+        : 'radial-gradient(circle at 50% 40%, rgba(0,102,204,0.15) 0%, transparent 70%)' }}
     >
       <div className="text-center">
-        <div className="text-white/60 text-sm uppercase tracking-widest">Shaking</div>
+        <div className="text-white/60 text-sm uppercase tracking-widest">Challenge active</div>
         <div className="text-3xl font-black text-white">{name}</div>
       </div>
 
-      <CountdownRing remaining={remaining ?? duration} duration={duration} />
-
-      <div className="text-center text-white/80 text-lg font-semibold animate-pulse">
-        {currentVibration < 5 ? '⚠️ Start shaking!' : currentVibration < 30 ? '💪 Keep going!' : currentVibration < 60 ? '🔥 Great job!' : '🚀 INCREDIBLE!'}
-      </div>
-
-      <VibrationGauge
-        vibration={currentVibration}
-        peak={peakVibration}
-        active
+      <MeasurementCountdown
+        nextMeasurementAt={nextMeasurementAt}
+        wakeUpTimeMs={wakeUpTimeMs}
       />
 
-      <div className="text-center">
-        <div className="text-white/50 text-xs uppercase tracking-widest">Current Score</div>
-        <div className="text-5xl font-black text-ksb-lightorange tabular-nums">{score?.toLocaleString() ?? 0}</div>
+      {/* Instructions */}
+      <div className={`text-center rounded-2xl px-6 py-4 transition-all ${
+        isImminent ? 'bg-ksb-orange/30 ring-2 ring-ksb-orange' : 'bg-white/5'
+      }`}>
+        {isImminent ? (
+          <p className="text-white font-black text-xl animate-pulse">
+            SHAKE AS HARD AS YOU CAN!
+          </p>
+        ) : (
+          <p className="text-white/70 text-sm leading-relaxed">
+            The KSB Guard sensor is about to take a measurement.<br/>
+            Pick it up and get ready — shake as hard as you can when the timer hits zero!
+          </p>
+        )}
       </div>
 
-      <button
-        onClick={onFinish}
-        className="text-white/30 hover:text-white/60 text-sm transition-colors"
-      >
-        Stop early
+      {/* Sensor icon pulsing */}
+      <div className={`w-24 h-24 rounded-full flex items-center justify-center border-2 ${
+        isImminent ? 'border-ksb-orange bg-ksb-orange/20 shake-anim' : 'border-ksb-lightblue/30 bg-ksb-lightblue/10 pulse-ring'
+      }`}>
+        <svg width="48" height="48" viewBox="0 0 64 64" fill="none">
+          <rect x="20" y="8" width="24" height="48" rx="6" fill="#0066CC" stroke="white" strokeWidth="2"/>
+          <rect x="26" y="14" width="12" height="8" rx="2" fill="#003F7F"/>
+          <circle cx="32" cy="42" r="5" fill="#E8500A"/>
+          <path d="M12 28 Q8 32 12 36" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
+          <path d="M52 28 Q56 32 52 36" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
+        </svg>
+      </div>
+
+      <button onClick={onFinish} className="text-white/30 hover:text-white/60 text-sm transition-colors">
+        Cancel
       </button>
     </div>
   );
 }
 
 // ── Result screen ─────────────────────────────────────────────────────────────
-function ResultScreen({ state, leaderboard, onReset }) {
-  const { name, score, peakVibration, leaderboardEntry } = state;
+function ResultScreen({ resultData, leaderboard, onReset }) {
+  const { name, score, vibration, leaderboardEntry, status } = resultData;
+  const timedOut = status === 'timeout';
   const rank = leaderboard.findIndex(e => e.id === leaderboardEntry?.id) + 1;
 
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-lg mx-auto px-4 py-10">
       <div className="text-center">
-        <div className="text-white/60 text-sm uppercase tracking-widest mb-1">Well done,</div>
-        <div className="text-4xl font-black text-white">{name}!</div>
+        <div className="text-white/60 text-sm uppercase tracking-widest mb-1">
+          {timedOut ? 'Session ended' : 'Measurement received!'}
+        </div>
+        <div className="text-4xl font-black text-white">{name}</div>
       </div>
 
-      {/* Score */}
-      <div className="text-center score-pop">
-        <div className="text-white/50 text-xs uppercase tracking-widest">Your Score</div>
-        <div className="text-7xl font-black text-ksb-lightorange tabular-nums leading-none mt-1">
-          {score?.toLocaleString()}
+      {timedOut ? (
+        <div className="bg-white/10 rounded-2xl px-6 py-6 text-center">
+          <div className="text-5xl mb-3">⏱️</div>
+          <p className="text-white/70">No measurement arrived before the timeout.<br/>Try again!</p>
         </div>
-        <div className="text-white/50 text-sm mt-1">
-          Peak vibration: <span className="text-white font-bold">{Math.round(peakVibration)} mm/s</span>
-        </div>
-      </div>
-
-      {/* Rank badge */}
-      {rank > 0 && (
-        <div className="bg-white/10 rounded-2xl px-8 py-4 text-center">
-          <div className="text-white/50 text-xs uppercase tracking-widest">Leaderboard Rank</div>
-          <div className="text-4xl font-black text-white mt-1">
-            {rank === 1 ? '🥇 #1' : rank === 2 ? '🥈 #2' : rank === 3 ? '🥉 #3' : `#${rank}`}
+      ) : (
+        <>
+          {/* Score */}
+          <div className="text-center score-pop">
+            <div className="text-white/50 text-xs uppercase tracking-widest">Your Score</div>
+            <div className="text-7xl font-black text-ksb-lightorange tabular-nums leading-none mt-1">
+              {score?.toLocaleString()}
+            </div>
+            <div className="text-white/50 text-sm mt-1">
+              Peak: <span className="text-white font-bold">{vibration?.toFixed(2)} mm/s</span>
+            </div>
           </div>
-        </div>
+
+          {/* Rank */}
+          {rank > 0 && (
+            <div className="bg-white/10 rounded-2xl px-8 py-4 text-center">
+              <div className="text-white/50 text-xs uppercase tracking-widest">Leaderboard Rank</div>
+              <div className="text-4xl font-black text-white mt-1">
+                {rank === 1 ? '🥇 #1' : rank === 2 ? '🥈 #2' : rank === 3 ? '🥉 #3' : `#${rank}`}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* KSB Guard pitch */}
@@ -186,8 +201,9 @@ function ResultScreen({ state, leaderboard, onReset }) {
           Did you know?
         </div>
         <p className="text-white/80 text-sm leading-relaxed">
-          The <strong className="text-white">KSB Guard</strong> sensor you just shook continuously monitors vibration on
-          industrial pumps — detecting imbalance, bearing wear, and cavitation before they cause costly downtime.
+          The <strong className="text-white">KSB Guard</strong> sensor you just shook continuously
+          monitors vibration on industrial pumps — detecting imbalance, bearing wear, and
+          cavitation before they cause costly downtime.
         </p>
         <div className="mt-3 text-ksb-lightorange text-xs font-semibold">
           Ask our team how KSB Guard protects your assets →
@@ -195,16 +211,16 @@ function ResultScreen({ state, leaderboard, onReset }) {
       </div>
 
       {/* Leaderboard */}
-      <div className="w-full">
-        <h2 className="text-center font-bold text-white/70 uppercase tracking-widest text-sm mb-4">
-          Leaderboard
-        </h2>
-        <Leaderboard entries={leaderboard} highlightId={leaderboardEntry?.id} />
-      </div>
+      {leaderboard.length > 0 && (
+        <div className="w-full">
+          <h2 className="text-center font-bold text-white/70 uppercase tracking-widest text-sm mb-4">Leaderboard</h2>
+          <Leaderboard entries={leaderboard} highlightId={leaderboardEntry?.id} />
+        </div>
+      )}
 
       <button
         onClick={onReset}
-        className="w-full bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl py-3 transition-all active:scale-95"
+        className="w-full bg-ksb-orange hover:bg-ksb-lightorange text-white font-bold rounded-xl py-3 transition-all active:scale-95"
       >
         Next Player
       </button>
@@ -212,20 +228,23 @@ function ResultScreen({ state, leaderboard, onReset }) {
   );
 }
 
-// ── Root App ──────────────────────────────────────────────────────────────────
+// ── Root ──────────────────────────────────────────────────────────────────────
 export default function App() {
-  const { state, leaderboard, startGame, finishGame, resetGame } = useGameState();
+  const { gameState, leaderboard, pump, startGame, finishGame, resetGame } = useGameState();
+  const [resultData, setResultData] = useState(null);
+  const prevStatus = useRef(null);
 
-  // Store last finished state for result screen
-  const [resultState, setResultState] = useState(null);
-
-  async function handleFinish() {
-    const data = await finishGame();
-    setResultState(data);
-  }
+  // Auto-finish when backend reports scored/timeout
+  useEffect(() => {
+    const s = gameState.status;
+    if ((s === 'scored' || s === 'timeout') && prevStatus.current === 'waiting') {
+      finishGame().then(data => setResultData(data));
+    }
+    prevStatus.current = s;
+  }, [gameState.status, finishGame]);
 
   function handleReset() {
-    setResultState(null);
+    setResultData(null);
     resetGame();
   }
 
@@ -239,18 +258,19 @@ export default function App() {
           </div>
           <span className="font-bold text-white text-sm">Guard · Shaker Challenge</span>
         </div>
-        <div className="text-xs text-white/40">
-          {leaderboard.length} player{leaderboard.length !== 1 ? 's' : ''}
+        <div className="flex items-center gap-3 text-xs text-white/40">
+          {pump && <span>{pump.pumpName}</span>}
+          <span>{leaderboard.length} player{leaderboard.length !== 1 ? 's' : ''}</span>
         </div>
       </div>
 
       <div className="pb-12">
-        {resultState ? (
-          <ResultScreen state={resultState} leaderboard={leaderboard} onReset={handleReset} />
-        ) : state.status === 'active' ? (
-          <ActiveScreen state={state} onFinish={handleFinish} />
+        {resultData ? (
+          <ResultScreen resultData={resultData} leaderboard={leaderboard} onReset={handleReset} />
+        ) : gameState.status === 'waiting' ? (
+          <WaitingScreen gameState={gameState} onFinish={() => finishGame().then(setResultData)} />
         ) : (
-          <IdleScreen onStart={startGame} leaderboard={leaderboard} />
+          <IdleScreen onStart={startGame} leaderboard={leaderboard} pump={pump} />
         )}
       </div>
     </div>

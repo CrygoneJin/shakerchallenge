@@ -9,35 +9,31 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ── Sensor polling ────────────────────────────────────────────────────────────
-// Poll the sensor at ~5 Hz and feed readings into the active game session.
-setInterval(async () => {
-  try {
-    const { vibration } = await sensor.getLatestReading();
-    game.recordReading(vibration);
-  } catch {
-    // sensor unavailable — ignore
-  }
-}, 200);
+// ── Pump discovery on startup ─────────────────────────────────────────────────
+sensor.discoverPump().catch((err) => {
+  console.warn('[sensor] pump discovery failed:', err.message);
+  console.warn('[sensor] will retry on first request');
+});
 
 // ── API routes ────────────────────────────────────────────────────────────────
 
-// GET /api/sensor — latest raw sensor reading
-app.get('/api/sensor', async (req, res) => {
+// GET /api/pump — current pump info + latest reading
+app.get('/api/pump', async (req, res) => {
   try {
+    const pump = await sensor.getPump();
     const reading = await sensor.getLatestReading();
-    res.json(reading);
+    res.json({ pump, reading });
   } catch (err) {
     res.status(502).json({ error: 'Sensor unavailable', detail: err.message });
   }
 });
 
 // POST /api/game/start  { name }
-app.post('/api/game/start', (req, res) => {
+app.post('/api/game/start', async (req, res) => {
   const name = (req.body.name || '').trim();
   if (!name) return res.status(400).json({ error: 'Name required' });
   try {
-    const state = game.start(name);
+    const state = await game.start(name);
     res.json(state);
   } catch (err) {
     res.status(409).json({ error: err.message });
@@ -49,15 +45,25 @@ app.get('/api/game/status', (req, res) => {
   res.json(game.getState());
 });
 
-// POST /api/game/finish  — end current session early or confirm finished
+// POST /api/game/finish — record score + save to leaderboard
 app.post('/api/game/finish', (req, res) => {
-  const state = game.finish();
-  if (!state) return res.status(404).json({ error: 'No active session' });
+  const state = game.getState();
+  if (!state || state.status === 'idle') {
+    return res.status(404).json({ error: 'No active session' });
+  }
 
-  // Auto-save to leaderboard if a name was entered
-  const entry = leaderboard.addEntry(state.name, state.score);
+  let entry = null;
+  if (state.score != null) {
+    entry = leaderboard.addEntry(state.name, state.score);
+  }
   game.reset();
   res.json({ ...state, leaderboardEntry: entry });
+});
+
+// POST /api/game/abort — discard session without saving
+app.post('/api/game/abort', (req, res) => {
+  const state = game.abort();
+  res.json(state || { status: 'idle' });
 });
 
 // POST /api/game/reset
@@ -68,17 +74,15 @@ app.post('/api/game/reset', (req, res) => {
 
 // GET /api/leaderboard
 app.get('/api/leaderboard', (req, res) => {
-  const entries = leaderboard.getAll();
-  res.json({ entries });
+  res.json({ entries: leaderboard.getAll() });
 });
 
-// DELETE /api/leaderboard/:id  (admin)
+// DELETE /api/leaderboard/:id
 app.delete('/api/leaderboard/:id', (req, res) => {
-  const removed = leaderboard.removeEntry(req.params.id);
-  res.json({ removed });
+  res.json({ removed: leaderboard.removeEntry(req.params.id) });
 });
 
-// DELETE /api/leaderboard  (admin clear all)
+// DELETE /api/leaderboard — clear all
 app.delete('/api/leaderboard', (req, res) => {
   leaderboard.clear();
   res.json({ cleared: true });
@@ -87,13 +91,13 @@ app.delete('/api/leaderboard', (req, res) => {
 // ── Static frontend ───────────────────────────────────────────────────────────
 const staticDir = path.join(__dirname, '..', '..', 'frontend', 'dist');
 app.use(express.static(staticDir));
-app.get('*', (req, res) => {
+app.get('*', (_req, res) => {
   res.sendFile(path.join(staticDir, 'index.html'));
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`Shaker Challenge backend listening on http://localhost:${PORT}`);
-  console.log(`Sensor mode: ${sensor.isMock() ? 'SIMULATION' : process.env.SENSOR_URL}`);
+  console.log(`Shaker Challenge backend on http://localhost:${PORT}`);
+  console.log(`Sensor mode: ${sensor.isMock() ? 'SIMULATION' : `LIVE (${process.env.KSB_API_KEY ? 'key set' : 'NO KEY!'})`}`);
 });
