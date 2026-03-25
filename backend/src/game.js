@@ -14,7 +14,15 @@
 
 const sensor = require('./sensor');
 
-const POLL_INTERVAL_MS = parseInt(process.env.POLL_INTERVAL_MS) || 30_000; // 30 s — stays within 1,600 calls/month limit
+// Poll interval budget:
+//   KSB Guard limit = 1,600 calls/sensor/month
+//   Assumption: 50 sessions/day × 2 min avg active polling
+//   Safe interval (s) = ceil(50 × 120 × EVENT_DAYS / 1,600)
+//   1-day event → 4 s  |  2-day event → 8 s  |  5-day event → 19 s
+//   POLL_INTERVAL_MS takes precedence when set explicitly.
+const _eventDays = parseInt(process.env.EVENT_DAYS) || 1;
+const _budgetIntervalMs = Math.ceil((50 * 120 * _eventDays) / 1_600) * 1_000;
+const POLL_INTERVAL_MS = parseInt(process.env.POLL_INTERVAL_MS) || _budgetIntervalMs;
 const WAIT_TIMEOUT_MS  = parseInt(process.env.WAIT_TIMEOUT_MS)  || 180_000; // 3 min
 
 let session = null;
