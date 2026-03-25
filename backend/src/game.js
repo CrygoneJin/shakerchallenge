@@ -14,7 +14,7 @@
 
 const sensor = require('./sensor');
 
-const POLL_INTERVAL_MS = parseInt(process.env.POLL_INTERVAL_MS) || 5_000;  // 5 s
+const POLL_INTERVAL_MS = parseInt(process.env.POLL_INTERVAL_MS) || 30_000; // 30 s — stays within 1,600 calls/month limit
 const WAIT_TIMEOUT_MS  = parseInt(process.env.WAIT_TIMEOUT_MS)  || 180_000; // 3 min
 
 let session = null;
