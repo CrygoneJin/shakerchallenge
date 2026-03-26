@@ -57,8 +57,8 @@ export default function MeasurementCountdown({ nextMeasurementAt, wakeUpTimeMs }
         </text>
       </svg>
       {isImminent && (
-        <div className="text-ksb-orange font-black text-sm animate-pulse uppercase tracking-wider">
-          SHAKE NOW!
+        <div className="text-ksb-cyan font-black text-sm animate-pulse uppercase tracking-wider">
+          Shake now.
         </div>
       )}
     </div>

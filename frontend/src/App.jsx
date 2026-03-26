@@ -30,18 +30,18 @@ function IdleScreen({ onStart, leaderboard, pump }) {
     <div className="flex flex-col items-center gap-8 w-full max-w-lg mx-auto px-4 py-10">
       {/* Header */}
       <div className="text-center">
-        <div className="text-ksb-orange font-black text-5xl tracking-tight text-shadow">SHAKER</div>
-        <div className="text-white font-black text-5xl tracking-tight text-shadow">CHALLENGE</div>
-        <div className="mt-2 text-white/50 text-sm">Powered by KSB Guard · Condition Monitoring</div>
+        <div className="text-ksb-cyan font-black text-5xl tracking-tight text-shadow">Guard.</div>
+        <div className="text-white font-black text-5xl tracking-tight text-shadow">In Action.</div>
+        <div className="mt-2 text-white/50 text-sm">KSB Guard · Solutions. For Life.</div>
       </div>
 
       {/* Sensor icon */}
       <div className="relative">
-        <div className="w-28 h-28 rounded-full bg-ksb-lightblue/20 flex items-center justify-center border-2 border-ksb-lightblue/30 pulse-ring">
+        <div className="w-28 h-28 rounded-full bg-ksb-blue/20 flex items-center justify-center border-2 border-ksb-blue/30 pulse-ring">
           <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
-            <rect x="20" y="8" width="24" height="48" rx="6" fill="#0066CC" stroke="white" strokeWidth="2"/>
-            <rect x="26" y="14" width="12" height="8" rx="2" fill="#003F7F"/>
-            <circle cx="32" cy="42" r="5" fill="#E8500A"/>
+            <rect x="20" y="8" width="24" height="48" rx="6" fill="#0066b3" stroke="white" strokeWidth="2"/>
+            <rect x="26" y="14" width="12" height="8" rx="2" fill="#003063"/>
+            <circle cx="32" cy="42" r="5" fill="#29AAED"/>
             <path d="M12 28 Q8 32 12 36" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
             <path d="M52 28 Q56 32 52 36" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
           </svg>
@@ -53,7 +53,7 @@ function IdleScreen({ onStart, leaderboard, pump }) {
         <div className="font-semibold text-white mb-2">How it works</div>
         <div>1. Enter your name and press Start</div>
         <div>2. Pick up the KSB Guard sensor and shake it as hard as you can</div>
-        <div>3. Keep shaking — a new measurement arrives every <span className="text-white font-semibold">{wakeMinutes} min</span></div>
+        <div>3. A new measurement arrives every <span className="text-white font-semibold">{wakeMinutes} min</span> — keep shaking</div>
         <div>4. Your vibration score appears instantly</div>
       </div>
 
@@ -69,15 +69,15 @@ function IdleScreen({ onStart, leaderboard, pump }) {
             onChange={e => { setName(e.target.value); setError(''); }}
             placeholder="Enter your name..."
             maxLength={40}
-            className="w-full rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/30 px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-ksb-orange"
+            className="w-full rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/30 px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-ksb-cyan"
           />
           {error && <p className="mt-1 text-red-400 text-sm">{error}</p>}
         </div>
         <button
           type="submit" disabled={loading}
-          className="w-full bg-ksb-orange hover:bg-ksb-lightorange disabled:opacity-50 text-white font-black text-xl rounded-xl py-4 transition-all active:scale-95 shadow-lg"
+          className="w-full bg-ksb-blue hover:bg-ksb-blue-mid disabled:opacity-50 text-white font-black text-xl rounded-xl py-4 transition-all active:scale-95 shadow-lg"
         >
-          {loading ? 'STARTING...' : '🎯 START CHALLENGE'}
+          {loading ? 'STARTING...' : '🎯 Start Challenge'}
         </button>
       </form>
 
@@ -101,8 +101,8 @@ function WaitingScreen({ gameState, onFinish }) {
     <div
       className="flex flex-col items-center gap-6 w-full max-w-lg mx-auto px-4 py-10"
       style={{ background: isImminent
-        ? 'radial-gradient(circle at 50% 40%, rgba(232,80,10,0.3) 0%, transparent 70%)'
-        : 'radial-gradient(circle at 50% 40%, rgba(0,102,204,0.15) 0%, transparent 70%)' }}
+        ? 'radial-gradient(circle at 50% 40%, rgba(0,102,179,0.3) 0%, transparent 70%)'
+        : 'radial-gradient(circle at 50% 40%, rgba(0,102,179,0.12) 0%, transparent 70%)' }}
     >
       <div className="text-center">
         <div className="text-white/60 text-sm uppercase tracking-widest">Challenge active</div>
@@ -116,28 +116,28 @@ function WaitingScreen({ gameState, onFinish }) {
 
       {/* Instructions */}
       <div className={`text-center rounded-2xl px-6 py-4 transition-all ${
-        isImminent ? 'bg-ksb-orange/30 ring-2 ring-ksb-orange' : 'bg-white/5'
+        isImminent ? 'bg-ksb-cyan/20 ring-2 ring-ksb-cyan' : 'bg-white/5'
       }`}>
         {isImminent ? (
-          <p className="text-white font-black text-xl animate-pulse">
-            SHAKE AS HARD AS YOU CAN!
+          <p className="text-white font-black text-xl">
+            Shake as hard as you can.
           </p>
         ) : (
           <p className="text-white/70 text-sm leading-relaxed">
             The KSB Guard sensor is about to take a measurement.<br/>
-            Pick it up and get ready — shake as hard as you can when the timer hits zero!
+            Pick it up and get ready — shake as hard as you can when the timer hits zero.
           </p>
         )}
       </div>
 
-      {/* Sensor icon pulsing */}
+      {/* Sensor icon */}
       <div className={`w-24 h-24 rounded-full flex items-center justify-center border-2 ${
-        isImminent ? 'border-ksb-orange bg-ksb-orange/20 shake-anim' : 'border-ksb-lightblue/30 bg-ksb-lightblue/10 pulse-ring'
+        isImminent ? 'border-ksb-cyan bg-ksb-cyan/20 shake-anim' : 'border-ksb-blue/30 bg-ksb-blue/10 pulse-ring'
       }`}>
         <svg width="48" height="48" viewBox="0 0 64 64" fill="none">
-          <rect x="20" y="8" width="24" height="48" rx="6" fill="#0066CC" stroke="white" strokeWidth="2"/>
-          <rect x="26" y="14" width="12" height="8" rx="2" fill="#003F7F"/>
-          <circle cx="32" cy="42" r="5" fill="#E8500A"/>
+          <rect x="20" y="8" width="24" height="48" rx="6" fill="#0066b3" stroke="white" strokeWidth="2"/>
+          <rect x="26" y="14" width="12" height="8" rx="2" fill="#003063"/>
+          <circle cx="32" cy="42" r="5" fill="#29AAED"/>
           <path d="M12 28 Q8 32 12 36" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
           <path d="M52 28 Q56 32 52 36" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
         </svg>
@@ -160,7 +160,7 @@ function ResultScreen({ resultData, leaderboard, onReset }) {
     <div className="flex flex-col items-center gap-6 w-full max-w-lg mx-auto px-4 py-10">
       <div className="text-center">
         <div className="text-white/60 text-sm uppercase tracking-widest mb-1">
-          {timedOut ? 'Session ended' : 'Measurement received!'}
+          {timedOut ? 'Session ended' : 'Measurement received.'}
         </div>
         <div className="text-4xl font-black text-white">{name}</div>
       </div>
@@ -168,14 +168,14 @@ function ResultScreen({ resultData, leaderboard, onReset }) {
       {timedOut ? (
         <div className="bg-white/10 rounded-2xl px-6 py-6 text-center">
           <div className="text-5xl mb-3">⏱️</div>
-          <p className="text-white/70">No measurement arrived before the timeout.<br/>Try again!</p>
+          <p className="text-white/70">No measurement arrived before the timeout.<br/>Try again.</p>
         </div>
       ) : (
         <>
           {/* Score */}
           <div className="text-center score-pop">
             <div className="text-white/50 text-xs uppercase tracking-widest">Your Score</div>
-            <div className="text-7xl font-black text-ksb-lightorange tabular-nums leading-none mt-1">
+            <div className="text-7xl font-black text-ksb-cyan tabular-nums leading-none mt-1">
               {score?.toLocaleString()}
             </div>
             <div className="text-white/50 text-sm mt-1">
@@ -196,17 +196,17 @@ function ResultScreen({ resultData, leaderboard, onReset }) {
       )}
 
       {/* KSB Guard pitch */}
-      <div className="bg-ksb-lightblue/15 border border-ksb-lightblue/30 rounded-2xl px-6 py-4 text-center">
-        <div className="text-ksb-lightorange font-bold text-sm uppercase tracking-wide mb-1">
-          Did you know?
+      <div className="bg-ksb-blue/15 border border-ksb-blue/30 rounded-2xl px-6 py-4 text-center">
+        <div className="text-ksb-cyan font-bold text-sm uppercase tracking-wide mb-1">
+          KSB Guard — Condition Monitoring
         </div>
         <p className="text-white/80 text-sm leading-relaxed">
-          The <strong className="text-white">KSB Guard</strong> sensor you just shook continuously
+          The <strong className="text-white">KSB Guard</strong> sensor you just held continuously
           monitors vibration on industrial pumps — detecting imbalance, bearing wear, and
           cavitation before they cause costly downtime.
         </p>
-        <div className="mt-3 text-ksb-lightorange text-xs font-semibold">
-          Ask our team how KSB Guard protects your assets →
+        <div className="mt-3 text-ksb-cyan text-xs font-semibold">
+          Ask our team about KSB Guard condition monitoring.
         </div>
       </div>
 
@@ -220,7 +220,7 @@ function ResultScreen({ resultData, leaderboard, onReset }) {
 
       <button
         onClick={onReset}
-        className="w-full bg-ksb-orange hover:bg-ksb-lightorange text-white font-bold rounded-xl py-3 transition-all active:scale-95"
+        className="w-full bg-ksb-blue hover:bg-ksb-blue-mid text-white font-bold rounded-xl py-3 transition-all active:scale-95"
       >
         Next Player
       </button>
@@ -249,14 +249,14 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-ksb-blue overflow-y-auto">
+    <div className="min-h-screen bg-ksb-navy overflow-y-auto">
       {/* Top bar */}
-      <div className="sticky top-0 z-10 bg-ksb-blue/90 backdrop-blur border-b border-white/10 px-4 py-3 flex items-center justify-between">
+      <div className="sticky top-0 z-10 bg-ksb-navy/90 backdrop-blur border-b border-white/10 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded bg-ksb-orange flex items-center justify-center">
+          <div className="w-8 h-8 rounded bg-ksb-blue flex items-center justify-center">
             <span className="text-white font-black text-xs">KSB</span>
           </div>
-          <span className="font-bold text-white text-sm">Guard · Shaker Challenge</span>
+          <span className="font-bold text-white text-sm">Guard · In Action.</span>
         </div>
         <div className="flex items-center gap-3 text-xs text-white/40">
           {pump && <span>{pump.pumpName}</span>}
