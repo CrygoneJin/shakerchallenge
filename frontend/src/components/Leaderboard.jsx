@@ -20,7 +20,7 @@ export default function Leaderboard({ entries = [], highlightId = null }) {
             key={entry.id}
             className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-all ${
               isHighlight
-                ? 'bg-ksb-orange/30 ring-2 ring-ksb-orange'
+                ? 'bg-ksb-cyan/20 ring-2 ring-ksb-cyan'
                 : 'bg-white/5 hover:bg-white/10'
             }`}
           >
@@ -28,7 +28,7 @@ export default function Leaderboard({ entries = [], highlightId = null }) {
               {i < 3 ? MEDALS[i] : <span className="text-white/40 text-sm">#{i + 1}</span>}
             </span>
             <span className="flex-1 font-semibold truncate">{entry.name}</span>
-            <span className="font-black text-xl tabular-nums text-ksb-lightorange">
+            <span className="font-black text-xl tabular-nums text-ksb-cyan">
               {entry.score.toLocaleString()}
             </span>
           </div>
